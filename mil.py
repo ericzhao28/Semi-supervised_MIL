@@ -275,8 +275,8 @@ class MIL(object):
                                   [-1, num_rows*num_cols])
             softmax = tf.nn.softmax(features)
 
-            fp_x = tf.reduce_sum(tf.multiply(x_map, softmax), [1], keep_dims=True)
-            fp_y = tf.reduce_sum(tf.multiply(y_map, softmax), [1], keep_dims=True)
+            fp_x = tf.reduce_sum(tf.multiply(x_map, softmax), [1], keepdims=True)
+            fp_y = tf.reduce_sum(tf.multiply(y_map, softmax), [1], keepdims=True)
 
             conv_out_flat = tf.reshape(tf.concat(axis=1, values=[fp_x, fp_y]), [-1, num_fp*2])
         else:
@@ -574,5 +574,5 @@ class MIL(object):
 
         out_dtype = [tf.float32, [tf.float32]*num_updates, tf.float32, tf.float32, [tf.float32]*num_updates, [tf.float32]*num_updates, tf.float32, [[tf.float32]*len(self.weights.keys())]*num_updates]
         result = tf.map_fn(batch_metalearn, elems=(inputa, inputb, actiona, actionb), dtype=out_dtype)
-        print 'Done with map.'
+        print('Done with map.')
         return result

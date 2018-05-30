@@ -164,15 +164,15 @@ def print_color(text, fore=None, back=None, reset=True, outstream=sys.stdout):
 
 
 def cursorup():
-    print Cursor.UP()
+    print(Cursor.UP())
 
 
 def cursorl():
-    print Cursor.BACK()
+    print(Cursor.BACK())
 
 
 def cursorr():
-    print Cursor.FORWARD()
+    print(Cursor.FORWARD())
 
 
 def get_color_code(fname):

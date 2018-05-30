@@ -61,7 +61,7 @@ def evaluate_vision_reach(env, graph, model, data_generator, sess, exp_string, r
                 if record_gifs:
                     video = np.array(Os)
                     record_gif_path = os.path.join(gifs_dir, 'cond%d.samp0.gif' % j)
-                    print 'Saving gif sample to :%s' % record_gif_path
+                    print('Saving gif sample to :', record_gif_path)
                     imageio.mimwrite(record_gif_path, video)
             env.render(close=True)
             if j != REACH_DEMO_CONDITIONS - 1 or i != len(selected_demo['selected_demoX']) - 1:
@@ -69,9 +69,9 @@ def evaluate_vision_reach(env, graph, model, data_generator, sess, exp_string, r
                 env.render()
                 time.sleep(0.5)
         if i % 5  == 0:
-            print "Task %d: current success rate is %.5f" % (i, np.mean(successes))
+            print('Task', i,': current success rate is ', np.mean(successes))
     success_rate_msg = "Final success rate is %.5f" % (np.mean(successes))
-    print success_rate_msg
+    print(success_rate_msg)
     with open('logs/log_sim_vision_reach.txt', 'a') as f:
         f.write(exp_string + ':\n')
         f.write(success_rate_msg + '\n')

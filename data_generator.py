@@ -64,7 +64,7 @@ class DataGenerator(object):
         N_demos = np.sum(demo['demoX'].shape[0] for i, demo in demos.iteritems())
         self.state_idx = range(demos[0]['demoX'].shape[-1])
         self._dU = demos[0]['demoU'].shape[-1]
-        print "Number of demos: %d" % N_demos
+        print("Number of demos: ", N_demos)
         idx = np.arange(n_folders)
         if FLAGS.train:
             n_val = FLAGS.val_set_size # number of demos for testing
@@ -192,7 +192,7 @@ class DataGenerator(object):
         num_channels = network_config['image_channels']
         # make queue for tensorflow to read from
         filename_queue = tf.train.string_input_producer(tf.convert_to_tensor(all_filenames), shuffle=False)
-        print 'Generating image processing ops'
+        print('Generating image processing ops')
         image_reader = tf.WholeFileReader()
         _, image_file = image_reader.read(filename_queue)
         image = tf.image.decode_gif(image_file)
@@ -217,7 +217,7 @@ class DataGenerator(object):
         image = tf.reshape(image, [self.T, -1])
         num_preprocess_threads = 1 # TODO - enable this to be set to >1
         min_queue_examples = 64 #128 #256
-        print 'Batching images'
+        print('Batching images')
         images = tf.train.batch(
                 [image],
                 batch_size = batch_image_size,
