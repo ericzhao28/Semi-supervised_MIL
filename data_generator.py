@@ -41,10 +41,12 @@ class DataGenerator(object):
             tmp.extend(demo_file[-FLAGS.val_set_size:])
             demo_file = tmp
         self.extract_supervised_data(demo_file)
+        """
         if FLAGS.use_noisy_demos:
             self.noisy_demo_gif_dir = FLAGS.noisy_demo_gif_dir
             noisy_demo_file = FLAGS.noisy_demo_file
             self.extract_supervised_data(noisy_demo_file, noisy=True)
+        """
 
     def extract_supervised_data(self, demo_file, noisy=False):
         """
@@ -90,7 +92,7 @@ class DataGenerator(object):
                     self.bias = - np.mean(
                         states.dot(self.scale), axis=0)
                     # Save the scale and bias.
-                    with open('data/scale_and_bias_%s.pkl' % FLAGS.experiment, 'wb') as f:
+                    with open('/Users/Rachael/Documents/Spring2018Classes/semisupervised_mil/scripts/mil_data/data/scale_and_bias_%s.pkl' % FLAGS.experiment, 'wb') as f:
                         pickle.dump({'scale': self.scale, 'bias': self.bias}, f)
                 for key in demos.keys():
                     demos[key]['demoX'] = demos[key]['demoX'].reshape(-1, len(self.state_idx))
