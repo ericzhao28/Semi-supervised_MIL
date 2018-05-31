@@ -14,7 +14,8 @@ import sys
 XML_PATH = 'sim_push_xmls/'
 SCALE_FILE_PATH = 'data/scale_and_bias_sim_push.pkl'
 CROP = False
-from gym.envs.mujoco.pusher import PusherEnv
+
+#from gym.envs.mujoco.pusher import PusherEnv
 
 class TFAgent(object):
     def __init__(self, model, scale_bias_file, sess):
@@ -72,7 +73,7 @@ class TFAgent(object):
                                 self.actiona: self.demoU,
                                 self.imageb: image})
         return action, dict()
-
+"""
 def load_env(demo_info):
     xml_filepath = demo_info['xml']
     suffix = xml_filepath[xml_filepath.index('pusher'):]
@@ -82,7 +83,7 @@ def load_env(demo_info):
 
     env = PusherEnv(**{'xml_file':xml_filepath, 'distractors': True})
     return env
-
+"""
 def load_demo(task_id, demo_dir, demo_inds):
     demo_info = pickle.load(open(demo_dir+task_id+'.pkl', 'rb'))
     demoX = demo_info['demoX'][demo_inds,:,:]
