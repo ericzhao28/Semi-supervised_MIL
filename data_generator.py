@@ -56,16 +56,13 @@ class DataGenerator(object):
         """
         
         demos = extract_demo_dict(demo_file)
-        #print(demo_file)
         # We don't need the whole dataset of simulated pushing.
         if FLAGS.experiment == 'sim_push':
             for key in demos.keys():
                 demos[key]['demoX'] = demos[key]['demoX'][6:-6, :, :].copy()
                 demos[key]['demoU'] = demos[key]['demoU'][6:-6, :, :].copy()
         n_folders = len(demos.keys())
-        #print('test2 \n')
-        #print(demos)
-        #print('\n\n\n\n\n')
+       
         N_demos = np.sum(demo['demoX'].shape[0] for i, demo in demos.items())
         self.state_idx = range(demos[0]['demoX'].shape[-1])
         self._dU = demos[0]['demoU'].shape[-1]
