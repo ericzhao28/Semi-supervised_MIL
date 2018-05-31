@@ -32,11 +32,7 @@ class MIL(object):
     def init_network(self, graph, input_tensors=None, restore_iter=0, prefix='Training_'):
         """ Helper method to initialize the tf networks used """
         with graph.as_default():
-            print('\n\n\n\n')
-            print(type(graph))
-            print(type(input_tensors))
-            print(type(restore_iter))
-            print('\n\n\n\n')
+            
             with Timer('building TF network'):
                 result = self.construct_model(input_tensors=input_tensors, prefix=prefix, dim_input=self._dO, dim_output=self._dU,
                                           network_config=self.network_params)
@@ -473,7 +469,7 @@ class MIL(object):
                     local_lossa += final_eept_loss_eps * final_eept_lossa
 
                 # Compute fast gradients
-                grads = tf.gradients(local_lossa, weights.values())
+                grads = tf.gradients(local_lossa, list(weights.values()))
                 gradients = dict(zip(weights.keys(), grads))
                 # make fast gradient zero for weights with gradient None
                 for key in gradients.keys():
