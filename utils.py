@@ -49,7 +49,7 @@ class DataLogger(object):
         """ Unpickle data from file specified by filename. """
         try:
             with open_zip(filename, 'rb') as f:
-                result = pickle.load(f, encoding='bytes')
+                result = pickle.load(f, encoding='latin1')
             return result
         except IOError:
             LOGGER.debug('Unpickle error. Cannot find file: %s', filename)
@@ -65,6 +65,10 @@ def mkdir_p(path):
             raise
 
 def extract_demo_dict(demo_file):
+    print('test1 \n')
+    print(demo_file)
+    print('\n')
+
     if type(demo_file) is not list:
         demos = DataLogger().unpickle(demo_file)
     else:
