@@ -49,7 +49,7 @@ class DataLogger(object):
         """ Unpickle data from file specified by filename. """
         try:
             with open_zip(filename, 'rb') as f:
-                result = pickle.load(f)
+                result = pickle.load(f, encoding='bytes')
             return result
         except IOError:
             LOGGER.debug('Unpickle error. Cannot find file: %s', filename)

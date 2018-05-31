@@ -7,7 +7,7 @@ import numpy as np
 import random
 import tensorflow as tf
 from PIL import Image
-from ..evaluation.sampler_utils import rollout
+from .sampler_utils import rollout
 from utils import mkdir_p, load_scale_and_bias
 import sys
 
