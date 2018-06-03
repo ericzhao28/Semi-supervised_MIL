@@ -39,7 +39,7 @@ def load_single():
     if leftover_size >= T_in + 3:
       leftover = data[:-leftover_size]
       leftover_X = leftover[:T_in]
-      leftover_Y = np.zero(T_pred, IMG_H, IMG_W, IMG_CH)
+      leftover_Y = np.zeros((T_pred, IMG_H, IMG_W, IMG_CH))
       leftover_Y[:leftover_size - T_in] = leftover[T_in:]
 
       yield leftover_X, leftover_Y
@@ -53,8 +53,8 @@ def load_data():
 
   while True:
     # Build batches.
-    batch_X = np.zero(BATCH, T_in, IMG_H, IMG_W, IMG_CH)
-    batch_Y = np.zero(BATCH, T_pred, IMG_H, IMG_W, IMG_CH)
+    batch_X = np.zeros((BATCH, T_in, IMG_H, IMG_W, IMG_CH))
+    batch_Y = np.zeros((BATCH, T_pred, IMG_H, IMG_W, IMG_CH))
     for i in range(BATCH):
       try:
         batch_X[i], batch_Y[i] = next(singles)

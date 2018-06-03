@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from model import LSTMAutoEncoder, build_model, load_data
+from model import LSTMAutoEncoder, build_model
+from utils import load_data
 from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH
 
 

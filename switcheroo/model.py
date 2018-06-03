@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tf_utils import conv2d, fc
-from config import BATCH, T_in, T_pred, std_dev, IMG_CH, IMG_H, IMG_W
+from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
+    CONV1_H, CONV2_H, CONV3_H, RNN_H
 
 
 class LSTMAutoEncoder(object):
@@ -8,17 +9,17 @@ class LSTMAutoEncoder(object):
     self.weights = {
         # wcx are conv2d filter weights of shape: [filter_h, filter_w,
         #                                          in_ch, out_ch]
-        'wc1': tf.Variable(tf.random_normal([5, 5, IMG_CH, 24],
-                                            stddev=std_dev)),
-        'wc2': tf.Variable(tf.random_normal([5, 5, 24, 64], stddev=std_dev)),
-        'wc3': tf.Variable(tf.random_normal([5, 5, 64, 64], stddev=std_dev)),
-        'wfc1': tf.Variable(tf.random_normal([1024, IMG_H * IMG_W * IMG_CH],
-                                             stddev=std_dev))
+        'wc1': tf.Variable(tf.random_normal([5, 5, IMG_CH, CONV1_H],
+                                            stddev=W_STDV)),
+        'wc2': tf.Variable(tf.random_normal([5, 5, CONV1_H, CONV2_H], stddev=W_STDV)),
+        'wc3': tf.Variable(tf.random_normal([5, 5, CONV2_H, CONV3_H], stddev=W_STDV)),
+        'wfc1': tf.Variable(tf.random_normal([RNN_H, IMG_H * IMG_W * IMG_CH],
+                                             stddev=W_STDV))
     }
     self.biases = {
-        'bc1': tf.Variable(tf.random_normal([24], stddev=0)),
-        'bc2': tf.Variable(tf.random_normal([64], stddev=0)),
-        'bc3': tf.Variable(tf.random_normal([64], stddev=0)),
+        'bc1': tf.Variable(tf.random_normal([CONV1_H], stddev=0)),
+        'bc2': tf.Variable(tf.random_normal([CONV2_H], stddev=0)),
+        'bc3': tf.Variable(tf.random_normal([CONV3_H], stddev=0)),
         'bfc1': tf.Variable(tf.random_normal([IMG_H * IMG_W * IMG_CH],
                                              stddev=0))
     }
@@ -27,7 +28,7 @@ class LSTMAutoEncoder(object):
     # Input shape: [BATCH, T_in, -1]
     # Output shape: [BATCH * T_pred, -1]
     with tf.variable_scope("LSTM") as scope:
-      lstm = tf.contrib.rnn.LSTMCell(num_units=512)
+      lstm = tf.contrib.rnn.LSTMCell(num_units=RNN_H)
       state = lstm.zero_state(BATCH, "float")
       datum = tf.split(data, T_in, axis=1)
 
