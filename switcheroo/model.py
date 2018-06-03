@@ -1,7 +1,6 @@
 import tensorflow as tf
-import numpy as np
 from tf_utils import conv2d, fc
-from config import BATCH, T_in, T_pred, std_dev, VID_L, PIXELS, IMG_CH
+from config import BATCH, T_in, T_pred, std_dev, IMG_CH, IMG_H, IMG_W
 
 
 class LSTMAutoEncoder(object):
@@ -9,16 +8,19 @@ class LSTMAutoEncoder(object):
     self.weights = {
         # wcx are conv2d filter weights of shape: [filter_h, filter_w,
         #                                          in_ch, out_ch]
-        'wc1': tf.Variable(tf.random_normal([5, 5, IMG_CH, 24], stddev=std_dev)),
+        'wc1': tf.Variable(tf.random_normal([5, 5, IMG_CH, 24],
+                                            stddev=std_dev)),
         'wc2': tf.Variable(tf.random_normal([5, 5, 24, 64], stddev=std_dev)),
         'wc3': tf.Variable(tf.random_normal([5, 5, 64, 64], stddev=std_dev)),
-        'wfc1': tf.Variable(tf.random_normal([1024, IMG_H * IMG_W * IMG_CH], stddev=std_dev))
+        'wfc1': tf.Variable(tf.random_normal([1024, IMG_H * IMG_W * IMG_CH],
+                                             stddev=std_dev))
     }
     self.biases = {
         'bc1': tf.Variable(tf.random_normal([24], stddev=0)),
         'bc2': tf.Variable(tf.random_normal([64], stddev=0)),
         'bc3': tf.Variable(tf.random_normal([64], stddev=0)),
-        'bfc1': tf.Variable(tf.random_normal([IMG_H * IMG_W * IMG_CH], stddev=0))
+        'bfc1': tf.Variable(tf.random_normal([IMG_H * IMG_W * IMG_CH],
+                                             stddev=0))
     }
 
   def EncoderDecoder(self, data):
@@ -29,14 +31,15 @@ class LSTMAutoEncoder(object):
       state = lstm.zero_state(BATCH, "float")
       datum = tf.split(data, T_in, axis=1)
 
+      # Encoder
       for t in range(T_in):
         if t != 0:
-         # Reuse scope for all subsequent timesteps. 
+         # Reuse scope for all subsequent timesteps.
           scope.reuse_variables()
         tmp = tf.reshape(datum[t], [BATCH, -1])
         output, state = lstm(tmp, state)
 
-      # Continue inferences...
+      # Decoder
       tmp = tf.reshape(datum[0], [BATCH, -1])
       zero_ = tf.zeros_like(tmp, "float")
       output_list = []
