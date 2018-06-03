@@ -7,6 +7,8 @@ from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH, \
     SAVES_PATH, MODEL_NAME
 
 
+print("Training the model: ", MODEL_NAME)
+
 ##############################
 ##### Load model and data.
 ##############################
