@@ -4,7 +4,6 @@ import pickle
 import glob
 
 
-paths = glob.glob("/home/ubuntu/gym/mil/data/*/*/*.gif")[14800:]
 def gif_to_np(path):
   with open(path[:-4] + ".pkl", "wb") as f:
     im = Image.open(path)
@@ -15,19 +14,54 @@ def gif_to_np(path):
             frame.size[1], frame.size[0], 3
          ) for frame in ImageSequence.Iterator(im)]
     )
-	  pickle.dump(data,f)
-    with Pool(processes=3) as pool:
-	    pool.map(gif_to_np, paths, chunksize = 100)
+	  return data
+
+
+def load_single():
+  # Get total video size
+  vid_l = T_in + T_pred
+
+  # Iterate over all files
+  for path in glob.glob("/home/ubuntu/gym/mil/data/*/*/*.gif")[14800:]:
+    # Load data.
+    data = gif_to_np(path)
+
+    # Skip data where less than T_in + 3 timesteps:
+    if data.shape[0] < T_in + 3:
+      continue
+
+    # Return typical data points.
+    for i in range(0, X.shape[0] - (X.shape[0] % vid_l), vid_l):
+      assert(data[i:i + vid_l].shape == (vid_l, IMG_H, IMG_W, IMG_CH))
+      yield data[i:i + T_in], data[i + T_in:i + vid_l]
+
+    # Get left overs if sufficient size:
+    leftover_size = data.shape[0] % vid_l
+    if leftover_size >= T_in + 3:
+      leftover = data[:-leftover_size]
+      leftover_X = leftover[:T_in]
+      leftover_Y = np.zero(T_pred, IMG_H, IMG_W, IMG_CH)
+      leftover_Y[:leftover_size - T_in] = leftover[T_in:]
+
+      yield leftover_X, leftover_Y
+
+  return
 
 
 def load_data():
-  # TODO change input dimensions
-  data = np.reshape(data, [-1, VID_L, IMG_H, IMG_W, IMG_CH])
-  # TODO update output/in to match config flags and our case
-  # Input is the first 10 seconds
-  X = data[:, 0:10]
-  # Output is after 10 seconds.
-  Y = data[:, 10:]
+  # Load single generator.
+  singles = load_single()
 
-  return X, Y
+  while True:
+    # Build batches.
+    batch_X = np.zero(BATCH, T_in, IMG_H, IMG_W, IMG_CH)
+    batch_Y = np.zero(BATCH, T_pred, IMG_H, IMG_W, IMG_CH)
+    for i in range(BATCH):
+      try:
+        batch_X[i], batch_Y[i] = next(singles)
+      except StopIteration:
+        # End of batch.
+        # yield batch
+        return
+    yield batch
 
