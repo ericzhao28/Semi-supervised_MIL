@@ -12,10 +12,12 @@ from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH, \
 ##############################
 net = LSTMAutoEncoder()
 fc_out, sig_out, X, Y, loss_op, train_op = build_model(net)
+
 global_step = tf.Variable(0,
                           dtype=tf.int32,
                           trainable=False,
                           name='global_step')
+inc_global_step = tf.assign_add(global_step, 1, name="increment")
 ##############################
 ##### Training code.
 ##############################
@@ -28,7 +30,7 @@ with tf.Session() as sess:
   tf_saver = tf.train.Saver(tf.global_variables())
 
   # Optional restore
-  # tf_saver.restore(sess, ckpt)
+  # tf_saver.restore(sess, SAVES_PATH + MODEL_NAME)
 
   # Break into epochs.
   for epoch in range(N_EPOCH):
@@ -38,11 +40,13 @@ with tf.Session() as sess:
       # Run TF graph.
       op, loss = sess.run([train_op, loss_op],
                           feed_dict={X: batch_X, Y: batch_Y})
+      sess.run(inc_global_step)
       iter_num = tf.train.global_step(sess, global_step)
       print("Iter: ", iter_num)
       print("Training loss: ", loss)
 
     # Save weights
+    print("Saving...")
     tf_saver.save(sess, SAVES_PATH + MODEL_NAME,
                   global_step=None)
 

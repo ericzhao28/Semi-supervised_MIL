@@ -13,8 +13,8 @@ T_pred = 16
 IMG_H = 125
 IMG_W = 125
 IMG_CH = 3
-BATCH = 100
-N_EPOCH = 10
+BATCH = 10
+N_EPOCH = 100
 W_STDV = 0.1
 
 
