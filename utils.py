@@ -1,121 +1,66 @@
-""" General utiliy functions """
-import logging
-try:
-   import cPickle as pickle
-except:
-   import pickle
-import gzip
-import contextlib
+from PIL import Image, ImageSequence
 import numpy as np
-import scipy.ndimage as sp_ndimage
-import os
-import errno
-import time
-import traceback as tb
-
-from color_print import *
+import glob
+from config import T_in, T_pred, IMG_H, IMG_W, IMG_CH, BATCH, DATA_PATH
 
 
-LOGGER = logging.getLogger(__name__)
+def gif_to_np(path):
+  im = Image.open(path)
+  data = np.array(
+      [np.array(
+          frame.copy().convert("RGB").getdata(), dtype=np.uint8
+      ).reshape(
+          frame.size[1], frame.size[0], 3
+      ) for frame in ImageSequence.Iterator(im)]
+  )
+  return data
 
-@contextlib.contextmanager
-def open_zip(filename, mode='r'):
-    """
-    Open a file; if filename ends with .gz, opens as a gzip file
-    """
-    if filename.endswith('.gz'):
-        openfn = gzip.open
-    else:
-        openfn = open
-    yield openfn(filename, mode)
 
-class DataLogger(object):
-    """
-    This class pickles data into files and unpickles data from files.
-    TODO: Handle logging text to terminal, GUI text, and/or log file at
-        DEBUG, INFO, WARN, ERROR, FATAL levels.
-    TODO: Handle logging data to terminal, GUI text/plots, and/or data
-          files.
-    """
-    def __init__(self):
-        pass
+def load_single():
+  # Get total video size
+  vid_l = T_in + T_pred
 
-    def pickle(self, filename, data):
-        """ Pickle data into file specified by filename. """
-        with open_zip(filename, 'wb') as f:
-            pickle.dump(data, f)
+  # Iterate over all files
+  for path in glob.glob(DATA_PATH + "*/*/*.gif")[14800:]:
+    # Load data.
+    data = gif_to_np(path)
 
-    def unpickle(self, filename):
-        """ Unpickle data from file specified by filename. """
-        try:
-            with open_zip(filename, 'rb') as f:
-                result = pickle.load(f)
-            return result
-        except IOError:
-            LOGGER.debug('Unpickle error. Cannot find file: %s', filename)
-            return None
-            
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
+    # Skip data where less than T_in + 3 timesteps:
+    if data.shape[0] < T_in + 3:
+      continue
 
-def extract_demo_dict(demo_file):
-    if type(demo_file) is not list:
-        demos = DataLogger().unpickle(demo_file)
-    else:
-        demos = {}
-        for i in xrange(0, len(demo_file)):
-            with Timer('Extracting demo file %d' % i):
-                demos[i] = DataLogger().unpickle(demo_file[i])
-    return demos
+    # Return typical data points.
+    for i in range(0, data.shape[0] - (data.shape[0] % vid_l), vid_l):
+      assert(data[i:i + vid_l].shape == (vid_l, IMG_H, IMG_W, IMG_CH))
+      yield data[i:i + T_in], data[i + T_in:i + vid_l]
 
-class Timer(object):
-    def __init__(self, message):
-        self.message = message
+    # Get left overs if sufficient size:
+    leftover_size = data.shape[0] % vid_l
+    if leftover_size >= T_in + 3:
+      leftover = data[:-leftover_size]
+      leftover_X = leftover[:T_in]
+      leftover_Y = np.zeros((T_pred, IMG_H, IMG_W, IMG_CH))
+      leftover_Y[:leftover_size - T_in] = leftover[T_in:]
 
-    def __enter__(self):
-        self.time_start = time.time()
+      yield leftover_X, leftover_Y
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        new_time = time.time() - self.time_start
-        fname, lineno, method, _ = tb.extract_stack()[-2]  # Get caller
-        _, fname = os.path.split(fname)
-        id_str = '%s:%s' % (fname, method)
-        print 'TIMER:'+color_string('%s: %s (Elapsed: %fs)' % (id_str, self.message, new_time), color='gray')
+  return
 
-def load_scale_and_bias(data_path):
-    with open(data_path, 'rb') as f:
-        data = pickle.load(f)
-        scale = data['scale']
-        bias = data['bias']
-    return scale, bias
-    
-def generate_noise(T, dU):
-    """
-    Generate a T x dU gaussian-distributed noise vector. This will
-    approximately have mean 0 and variance 1, ignoring smoothing.
 
-    Args:
-        T: Number of time steps.
-        dU: Dimensionality of actions.
-    Hyperparams:
-        smooth: Whether or not to perform smoothing of noise.
-        var : If smooth=True, applies a Gaussian filter with this
-            variance.
-        renorm : If smooth=True, renormalizes data to have variance 1
-            after smoothing.
-    """
-    var = 2.0
-    noise = np.random.randn(T, dU)
-    # Smooth noise. This violates the controller assumption, but
-    # might produce smoother motions.
-    for i in range(dU):
-        noise[:, i] = sp_ndimage.filters.gaussian_filter(noise[:, i], var)
-    variance = np.var(noise, axis=0)
-    noise = noise / np.sqrt(variance)
-    return noise
+def load_data():
+  # Load single generator.
+  singles = load_single()
+
+  while True:
+    # Build batches.
+    batch_X = np.zeros((BATCH, T_in, IMG_H, IMG_W, IMG_CH))
+    batch_Y = np.zeros((BATCH, T_pred, IMG_H, IMG_W, IMG_CH))
+    for i in range(BATCH):
+      try:
+        batch_X[i], batch_Y[i] = next(singles)
+      except StopIteration:
+        # End of batch.
+        # yield batch
+        return
+    yield batch_X, batch_Y
+
