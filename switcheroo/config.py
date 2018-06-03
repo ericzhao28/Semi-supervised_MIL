@@ -4,6 +4,10 @@
 
 # TODO: swap to Tensorflow flags
 # to align with rest of MIL lib.
+
+DATA_PATH = "/home/ubuntu/data/"
+SAVES_PATH = "/home/ubuntu/saves/"
+MODEL_NAME = "TEST"
 T_in = 16
 T_pred = 16
 IMG_H = 125
