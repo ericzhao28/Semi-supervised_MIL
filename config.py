@@ -5,7 +5,7 @@
 # TODO: swap to Tensorflow flags
 # to align with rest of MIL lib.
 
-DATA_PATH = "/home/ubuntu/data/"
+DATA_PATH = "/home/ubuntu/data/sim_push/"
 SAVES_PATH = "/home/ubuntu/saves/"
 
 T_in = 16

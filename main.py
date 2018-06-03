@@ -43,12 +43,11 @@ with tf.Session() as sess:
       op, loss = sess.run([train_op, loss_op],
                           feed_dict={X: batch_X, Y: batch_Y})
       sess.run(inc_global_step)
-      iter_num = tf.train.global_step(sess, global_step)
-      print("Iter: ", iter_num)
       print("Training loss: ", loss)
 
     # Save weights
     print("Saving...")
+    tf.train.global_step(sess, global_step)
     tf_saver.save(sess, SAVES_PATH + MODEL_NAME,
                   global_step=global_step)
 
