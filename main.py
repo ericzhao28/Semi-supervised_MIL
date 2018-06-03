@@ -48,7 +48,7 @@ with tf.Session() as sess:
     # Save weights
     print("Saving...")
     tf_saver.save(sess, SAVES_PATH + MODEL_NAME,
-                  global_step=None)
+                  global_step=global_step)
 
   # Testing the reconstruction .
   batch_X = next(load_data)[0]
