@@ -1,20 +1,19 @@
 from PIL import Image, ImageSequence
 import numpy as np
-import pickle
 import glob
+from config import T_in, T_pred, IMG_H, IMG_W, IMG_CH, BATCH
 
 
 def gif_to_np(path):
-  with open(path[:-4] + ".pkl", "wb") as f:
-    im = Image.open(path)
-    data = np.array(
-        [np.array(
-            frame.copy().convert("RGB").getdata(), dtype=np.uint8
-         ).reshape(
-            frame.size[1], frame.size[0], 3
-         ) for frame in ImageSequence.Iterator(im)]
-    )
-	  return data
+  im = Image.open(path)
+  data = np.array(
+      [np.array(
+          frame.copy().convert("RGB").getdata(), dtype=np.uint8
+      ).reshape(
+          frame.size[1], frame.size[0], 3
+      ) for frame in ImageSequence.Iterator(im)]
+  )
+  return data
 
 
 def load_single():
@@ -31,7 +30,7 @@ def load_single():
       continue
 
     # Return typical data points.
-    for i in range(0, X.shape[0] - (X.shape[0] % vid_l), vid_l):
+    for i in range(0, data.shape[0] - (data.shape[0] % vid_l), vid_l):
       assert(data[i:i + vid_l].shape == (vid_l, IMG_H, IMG_W, IMG_CH))
       yield data[i:i + T_in], data[i + T_in:i + vid_l]
 
@@ -63,5 +62,5 @@ def load_data():
         # End of batch.
         # yield batch
         return
-    yield batch
+    yield batch_X, batch_Y
 

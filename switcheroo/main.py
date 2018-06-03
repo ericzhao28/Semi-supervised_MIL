@@ -1,9 +1,8 @@
 import tensorflow as tf
 import numpy as np
-import random
 import matplotlib.pyplot as plt
 from model import LSTMAutoEncoder, build_model, load_data
-from config import T_in, T_pred, BATCH, IMG_H, IMG_W, IMG_CH
+from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH
 
 
 ##############################
@@ -11,9 +10,6 @@ from config import T_in, T_pred, BATCH, IMG_H, IMG_W, IMG_CH
 ##############################
 net = LSTMAutoEncoder()
 fc_out, sig_out, X, Y, loss_op, train_op = build_model(net)
-
-perm = range(train_X.shape[0])
-random.shuffle(perm)
 
 ##############################
 ##### Training code.
@@ -30,12 +26,12 @@ with tf.Session() as sess:
     for batch_X, batch_Y in load_data():
       # Run TF graph.
       op, loss = sess.run([train_op, loss_op],
-                          feed_dict={X: batch_x, Y: batch_y})
+                          feed_dict={X: batch_X, Y: batch_Y})
       print("Training loss: ", loss)
 
   # Testing the reconstruction .
   batch_X = next(load_data)[0]
-  img_pre, img = sess.run([fc_out, sig_out], feed_dict = {X: batch_X})
+  img_pre, img = sess.run([fc_out, sig_out], feed_dict={X: batch_X})
   img_pre = np.reshape(img_pre, [BATCH, T_pred, IMG_H, IMG_W, IMG_CH])
   img = np.reshape(img, [BATCH, T_pred, IMG_H, IMG_W, IMG_CH])
 
