@@ -1,8 +1,7 @@
 import tensorflow as tf
-from tf_utils import conv2d, fc
-from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
+from tf_utils import conv2d, fc from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
     CONV1_H, CONV2_H, CONV3_H, RNN_H, CONV1_FILTER_H, CONV1_FILTER_W, \
-    CONV2_FILTER_H, CONV2_FILTER_W, CONV3_FILTER_H, CONV3_FILTER_W
+    CONV2_FILTER_H, CONV2_FILTER_W, CONV3_FILTER_H, CONV3_FILTER_W, LR
 
 class LSTMAutoEncoder(object):
   def __init__(self):
@@ -82,7 +81,7 @@ def build_model(net):
   # Compute loss...
   loss_op = tf.reduce_sum(tf.reduce_sum(diff * diff, axis=2), axis=1)
   loss_op = tf.reduce_mean(loss_op)
-  train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss_op)
+  train_op = tf.train.AdamOptimizer(learning_rate=LR).minimize(loss_op)
 
   return fc_out, sig_out, X, Y, loss_op, train_op
 
