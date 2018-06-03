@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from model import LSTMAutoEncoder, build_model
 from utils import load_data
-from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH
+from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH, \
+    SAVES_PATH, MODEL_NAME
 
 
 ##############################
@@ -11,7 +12,10 @@ from config import T_pred, BATCH, IMG_H, IMG_W, IMG_CH, N_EPOCH
 ##############################
 net = LSTMAutoEncoder()
 fc_out, sig_out, X, Y, loss_op, train_op = build_model(net)
-
+global_step = tf.Variable(0,
+                          dtype=tf.int32,
+                          trainable=False,
+                          name='global_step')
 ##############################
 ##### Training code.
 ##############################
@@ -19,6 +23,12 @@ with tf.Session() as sess:
   # Variable initialization.
   init = tf.global_variables_initializer()
   sess.run(init)
+
+  # Build saver
+  tf_saver = tf.train.Saver(tf.global_variables())
+
+  # Optional restore
+  # tf_saver.restore(sess, ckpt)
 
   # Break into epochs.
   for epoch in range(N_EPOCH):
@@ -28,7 +38,13 @@ with tf.Session() as sess:
       # Run TF graph.
       op, loss = sess.run([train_op, loss_op],
                           feed_dict={X: batch_X, Y: batch_Y})
+      iter_num = tf.train.global_step(sess, global_step)
+      print("Iter: ", iter_num)
       print("Training loss: ", loss)
+
+    # Save weights
+    tf_saver.save(sess, SAVES_PATH + MODEL_NAME,
+                  global_step=None)
 
   # Testing the reconstruction .
   batch_X = next(load_data)[0]

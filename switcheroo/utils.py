@@ -1,7 +1,7 @@
 from PIL import Image, ImageSequence
 import numpy as np
 import glob
-from config import T_in, T_pred, IMG_H, IMG_W, IMG_CH, BATCH
+from config import T_in, T_pred, IMG_H, IMG_W, IMG_CH, BATCH, DATA_PATH
 
 
 def gif_to_np(path):
@@ -21,7 +21,7 @@ def load_single():
   vid_l = T_in + T_pred
 
   # Iterate over all files
-  for path in glob.glob("/home/ubuntu/gym/mil/data/*/*/*.gif")[14800:]:
+  for path in glob.glob(DATA_PATH + "*/*/*.gif")[14800:]:
     # Load data.
     data = gif_to_np(path)
 
