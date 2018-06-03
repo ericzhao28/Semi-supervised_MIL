@@ -21,7 +21,7 @@ def load_single():
   vid_l = T_in + T_pred
 
   # Iterate over all files
-  for path in glob.glob(DATA_PATH + "*/*/*.gif")[14800:]:
+  for path in glob.glob(DATA_PATH + "*/*.gif"):
     # Load data.
     data = gif_to_np(path)
 

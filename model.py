@@ -1,5 +1,6 @@
 import tensorflow as tf
-from tf_utils import conv2d, fc from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
+from tf_utils import conv2d, fc
+from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
     CONV1_H, CONV2_H, CONV3_H, RNN_H, CONV1_FILTER_H, CONV1_FILTER_W, \
     CONV2_FILTER_H, CONV2_FILTER_W, CONV3_FILTER_H, CONV3_FILTER_W, LR
 
