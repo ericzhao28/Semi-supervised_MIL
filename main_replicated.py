@@ -15,8 +15,8 @@ LOGGER = logging.getLogger(__name__)
 
 ## Dataset/method options
 flags.DEFINE_string('experiment', 'sim_vision_reach', 'sim_vision_reach or sim_push')
-flags.DEFINE_string('demo_file', './scripts/mil_data/data/sim_vision_reach/', 'path to the directory where demo files that containing robot states and actions are stored')
-flags.DEFINE_string('demo_gif_dir', './scripts/mil_data/data/sim_vision_reach/', 'path to the videos of demonstrations')
+flags.DEFINE_string('demo_file', './home/ubuntu/data/sim_vision_reach/', 'path to the directory where demo files that containing robot states and actions are stored')
+flags.DEFINE_string('demo_gif_dir', './home/ubuntu/data/sim_vision_reach/', 'path to the videos of demonstrations')
 flags.DEFINE_string('gif_prefix', 'color', 'prefix of the video directory for each task, e.g. object_0 for task 0')
 flags.DEFINE_integer('im_width', 80, 'width of the images in the demo videos,  125 for sim_push, and 80 for sim_vision_reach')
 flags.DEFINE_integer('im_height', 64, 'height of the images in the demo videos, 125 for sim_push, and 64 for sim_vision_reach')
