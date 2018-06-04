@@ -52,7 +52,7 @@ with tf.Session() as sess:
                   global_step=global_step)
 
   # Testing the reconstruction .
-  batch_X = next(load_data)[0]
+  batch_X = next(load_data())[0]
   img_pre, img = sess.run([fc_out, sig_out], feed_dict={X: batch_X})
   img_pre = np.reshape(img_pre, [BATCH, T_pred, IMG_H, IMG_W, IMG_CH])
   img = np.reshape(img, [BATCH, T_pred, IMG_H, IMG_W, IMG_CH])
