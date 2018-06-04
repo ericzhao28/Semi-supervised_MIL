@@ -23,7 +23,7 @@ inc_global_step = tf.assign_add(global_step, 1, name="increment")
 ##############################
 ##### Training code.
 ##############################
-with tf.Session() as sess:
+with tf.Session(config=tf.ConfigProto(device_count={'GPU': 0})) as sess:
   # Variable initialization.
   init = tf.global_variables_initializer()
   sess.run(init)
@@ -59,6 +59,7 @@ with tf.Session() as sess:
 
   # Visually validate the results.
   for t in range(T_pred):
+    img_pre[0, t].dump(open("a" + str(t) ".np", "wb"))
     plt.imshow(img_pre[0, t])
     plt.show()
 
