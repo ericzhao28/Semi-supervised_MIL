@@ -1,88 +1,114 @@
+from layers import Conv2d, EncoderDecoder, FC
 import tensorflow as tf
-from tf_utils import conv2d, fc
-from config import BATCH, T_in, T_pred, W_STDV, IMG_CH, IMG_H, IMG_W, \
-    CONV1_H, CONV2_H, CONV3_H, RNN_H, CONV1_FILTER_H, CONV1_FILTER_W, \
-    CONV2_FILTER_H, CONV2_FILTER_W, CONV3_FILTER_H, CONV3_FILTER_W, LR
-
-class LSTMAutoEncoder(object):
-  def __init__(self):
-    self.weights = {
-        # wcx are conv2d filter weights of shape: [filter_h, filter_w,
-        #                                          in_ch, out_ch]
-        'wc1': tf.Variable(tf.random_normal([CONV1_FILTER_H, CONV1_FILTER_W, IMG_CH, CONV1_H],
-                                            stddev=W_STDV)),
-        'wc2': tf.Variable(tf.random_normal([CONV2_FILTER_H, CONV2_FILTER_W, CONV1_H, CONV2_H], stddev=W_STDV)),
-        'wc3': tf.Variable(tf.random_normal([CONV3_FILTER_H, CONV3_FILTER_W, CONV2_H, CONV3_H], stddev=W_STDV)),
-        'wfc1': tf.Variable(tf.random_normal([RNN_H, IMG_H * IMG_W * IMG_CH],
-                                             stddev=W_STDV))
-    }
-    self.biases = {
-        'bc1': tf.Variable(tf.random_normal([CONV1_H], stddev=0)),
-        'bc2': tf.Variable(tf.random_normal([CONV2_H], stddev=0)),
-        'bc3': tf.Variable(tf.random_normal([CONV3_H], stddev=0)),
-        'bfc1': tf.Variable(tf.random_normal([IMG_H * IMG_W * IMG_CH],
-                                             stddev=0))
-    }
-
-  def EncoderDecoder(self, data):
-    # Input shape: [BATCH, T_in, -1]
-    # Output shape: [BATCH * T_pred, -1]
-    with tf.variable_scope("LSTM") as scope:
-      lstm = tf.contrib.rnn.LSTMCell(num_units=RNN_H)
-      state = lstm.zero_state(BATCH, "float")
-      datum = tf.split(data, T_in, axis=1)
-
-      # Encoder
-      for t in range(T_in):
-        if t != 0:
-         # Reuse scope for all subsequent timesteps.
-          scope.reuse_variables()
-        tmp = tf.reshape(datum[t], [BATCH, -1])
-        output, state = lstm(tmp, state)
-
-      # Decoder
-      tmp = tf.reshape(datum[0], [BATCH, -1])
-      zero_ = tf.zeros_like(tmp, "float")
-      output_list = []
-      for t in range(T_pred):
-        scope.reuse_variables()
-        output, state = lstm(zero_, state)
-        output_list.append(output)
-
-      # Return the inferences..
-      out = tf.concat(output_list, axis=1)
-      return tf.reshape(out, [BATCH * T_pred, -1])
+import numpy as np
+import matplotlib.pyplot as plt
+from utils import load_data
+from config import T_in, T_pred, IMG_H, IMG_W, IMG_CH, N_EPOCH, SAVES_PATH
 
 
-def build_model(net):
+def build(X_shape, t_pred, hyperparameters):
+  LR, N_FC, N_CONVS, CONV_FIRST_CHANNELS, CONV_CHANNELS, CONV_STRIDES, \
+      CONV_H, CONV_W, CONV_INIT, CONV_ACT, RNN_INIT, RNN_H, RNN_CELL, \
+      FC_HIDDEN, FC_INIT, FC_ACT = hyperparameters
+
+  model_name = "-".join(hyperparameters)
+
+  batch_s, t_in, img_h, img_w, img_ch = X_shape
+
+  # Satisfy naming
+  print("Building the model: ", model_name)
+
   # Construct model..
-  X = tf.placeholder("float", [BATCH, T_in, IMG_H, IMG_W, IMG_CH])
-  Y = tf.placeholder("float", [BATCH, T_pred, IMG_H, IMG_W, IMG_CH])
+  X = tf.placeholder("float32", X_shape)
+  P = tf.reshape(X, [batch_s * t_in] + X_shape[2:])
+  Y = tf.placeholder("float32", [batch_s, t_pred] + X_shape[2:])
 
-  # Flatten the images going in s.t. BATCH * T_in, height, width, ch..
-  X_flat = tf.reshape(X, [BATCH * T_in, IMG_H, IMG_W, IMG_CH])
-  conv1 = conv2d(X_flat, net.weights['wc1'], net.biases['bc1'], 2)
-  conv2 = conv2d(conv1, net.weights['wc2'], net.biases['bc2'], 2)
-  conv3 = conv2d(conv2, net.weights['wc3'], net.biases['bc3'], 2)
+  P = Conv2d(P, batch_s, CONV_FIRST_CHANNELS, CONV_STRIDES,
+             CONV_H, CONV_W, CONV_INIT, CONV_ACT)
+  for i in range(N_CONVS - 1):
+    P = Conv2d(P, batch_s, CONV_CHANNELS, CONV_STRIDES,
+               CONV_H, CONV_W, CONV_INIT, CONV_ACT)
 
   # Now we hyperflatten everything for the lstm: BATCH, T-in, everything.
-  res = tf.reshape(conv3, [BATCH, T_in, -1])
-  prediction = net.EncoderDecoder(res)
+  P = tf.reshape(P, (batch_s, t_in, -1))
+  P = EncoderDecoder(P, batch_s, RNN_INIT, RNN_H, RNN_CELL, t_pred)
 
   # Infer on BATCH * T_pred, everything.
-  fc_out = fc(prediction, net.weights['wfc1'], net.biases['bfc1'])
-  # Reshape to on BATCH, T_pred, IMG_H * IMG_W * IMG_CH.
-  fc_out = tf.reshape(fc_out, [BATCH, T_pred, IMG_H * IMG_W * IMG_CH])
-  sig_out = tf.sigmoid(fc_out)
+  for i in range(N_FC - 1):
+    P = FC(P, FC_HIDDEN, FC_INIT, FC_ACT)
+  P = FC(P, img_h * img_w * img_ch, FC_INIT, FC_ACT)
 
-  # Calculate difference..
-  Y_flat = tf.reshape(Y, [BATCH, T_pred, IMG_H * IMG_W * IMG_CH])
-  diff = fc_out - Y_flat
+  # Reshape to on BATCH, T_pred, IMG_H * IMG_W * IMG_CH.
+  P = tf.reshape(P, (batch_s, t_pred, -1))
+  diff = P - tf.reshape(Y, (batch_s, t_pred, -1))
+
+  # Why do we need the sigmoided? Who knows.
+  P_norm = tf.sigmoid(P)
 
   # Compute loss...
   loss_op = tf.reduce_sum(tf.reduce_sum(diff * diff, axis=2), axis=1)
   loss_op = tf.reduce_mean(loss_op)
+
   train_op = tf.train.AdamOptimizer(learning_rate=LR).minimize(loss_op)
 
-  return fc_out, sig_out, X, Y, loss_op, train_op
+  return model_name, P, P_norm, X, Y, loss_op, train_op
+
+
+def train(hyperparameters):
+  batch_s = hyperparameters[0]
+  hyperparameters = hyperparameters[1:]
+
+  ##############################
+  ##### Load model and data.
+  ##############################
+  X_shape = (batch_s, T_in, IMG_H, IMG_W, IMG_CH)
+  model_name, fc_out, sig_out, X, Y, loss_op, train_op = build(
+      X_shape, T_pred, hyperparameters)
+  global_step = tf.Variable(0,
+                            dtype=tf.int32,
+                            trainable=False,
+                            name='global_step')
+  inc_global_step = tf.assign_add(global_step, 1, name="increment")
+
+  ##############################
+  ##### Training code.
+  ##############################
+  with tf.Session() as sess:
+    # Variable initialization.
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    # Build saver
+    tf_saver = tf.train.Saver(tf.global_variables())
+
+    # Optional restore
+    # tf_saver.restore(sess, SAVES_PATH + MODEL_NAME)
+
+    # Break into epochs.
+    for epoch in range(N_EPOCH):
+      print("Starting epoch %d" % epoch)
+      # Batch data.
+      for batch_X, batch_Y in load_data():
+        # Run TF graph.
+        op, loss = sess.run([train_op, loss_op],
+                            feed_dict={X: batch_X, Y: batch_Y})
+        sess.run(inc_global_step)
+        print("Training loss: ", loss)
+
+      # Save weights
+      print("Saving...")
+      tf.train.global_step(sess, global_step)
+      tf_saver.save(sess, SAVES_PATH + model_name,
+                    global_step=global_step)
+
+    # Testing the reconstruction .
+    batch_X = next(load_data)[0]
+    img_pre, img = sess.run([fc_out, sig_out], feed_dict={X: batch_X})
+    img_pre = np.reshape(img_pre, [batch_s, T_pred, IMG_H, IMG_W, IMG_CH])
+    img = np.reshape(img, [batch_s, T_pred, IMG_H, IMG_W, IMG_CH])
+
+    # Visually validate the results.
+    for t in range(T_pred):
+      plt.imshow(img_pre[0, t])
+      plt.show()
 
