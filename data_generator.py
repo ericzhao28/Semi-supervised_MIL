@@ -35,6 +35,10 @@ class DataGenerator(object):
 
         demo_file = FLAGS.demo_file
         demo_file = natsorted(glob.glob(demo_file + '/*pkl'))
+        # Only looking at a quarter of the dataset
+        demo_file = demo_file[3*len(demo_file)/4:]
+
+
         self.dataset_size = len(demo_file)
         if FLAGS.train and FLAGS.training_set_size != -1:
             tmp = demo_file[:FLAGS.training_set_size]
@@ -113,9 +117,17 @@ class DataGenerator(object):
                 offset = 0
             train_img_folders = {i: os.path.join(self.demo_gif_dir, self.gif_prefix + '_%d' % i) for i in self.train_idx}
             val_img_folders = {i: os.path.join(self.demo_gif_dir, self.gif_prefix + '_%d' % (i+offset)) for i in self.val_idx}
+
+            # Taking 1/4 of the dataset
+            train_img_folders = train_img_folders[3*len(train_img_folders)/4:]
+            val_img_folders = val_img_folders[3*len(val_img_folders)/4:]
+
+            """ I don't think we're using noisy so this is probably fine
             if noisy:
                 noisy_train_img_folders = {i: os.path.join(self.noisy_demo_gif_dir, self.gif_prefix + '_%d' % i) for i in self.train_idx}
                 noisy_val_img_folders = {i: os.path.join(self.noisy_demo_gif_dir, self.gif_prefix + '_%d' % (i+offset)) for i in self.val_idx}
+            """
+            
             TEST_PRINT_INTERVAL = 500
             TOTAL_ITERS = FLAGS.metatrain_iterations
             self.all_training_filenames = []
