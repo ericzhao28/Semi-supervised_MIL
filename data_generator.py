@@ -67,10 +67,12 @@ class DataGenerator(object):
                 demos[key]['demoU'] = demos[key]['demoU'][6:-6, :, :].copy()
         n_folders = len(demos.keys())
        
-        N_demos = np.sum(demo['demoX'].shape[0] for i, demo in demos.items())
+        #N_demos=0:
+
+        #N_demos = np.sum(demo.get(['demoX']).shape[0] for i, demo in demos.items())
         self.state_idx = range(demos[0]['demoX'].shape[-1])
         self._dU = demos[0]['demoU'].shape[-1]
-        print("Number of demos: ", N_demos)
+        #print("Number of demos: ", N_demos)
         idx = np.arange(n_folders)
         if FLAGS.train:
             n_val = FLAGS.val_set_size # number of demos for testing
