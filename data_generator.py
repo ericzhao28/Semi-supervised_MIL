@@ -98,7 +98,7 @@ class DataGenerator(object):
                     self.bias = - np.mean(
                         states.dot(self.scale), axis=0)
                     # Save the scale and bias.
-                    with open('/home/ubuntu/data/sim_vision_reach/scale_and_bias_%s.pkl' % FLAGS.experiment, 'wb') as f:
+                    with open('/home/ubuntu/data/scale_and_bias_%s.pkl' % FLAGS.experiment, 'wb') as f:
                         pickle.dump({'scale': self.scale, 'bias': self.bias}, f)
                     #with open('./scripts/mil_data/data/scale_and_bias_%s.pkl' % FLAGS.experiment, 'wb') as f:
                     #    pickle.dump({'scale': self.scale, 'bias': self.bias}, f)
