@@ -80,8 +80,13 @@ def build_model(net):
   diff = fc_out - Y_flat
 
   # Compute loss...
-  loss_op = tf.reduce_sum(tf.reduce_sum(diff * diff, axis=2), axis=1)
+  vs = tf.trainable_variables() 
+  lossL2 = tf.add_n([tf.nn.l2_loss(v) for v in vs
+                     if 'bias' not in v.name ]) * 0.001
+
+  loss_op = tf.reduce_sum(tf.reduce_sum(diff * diff, axis=2), axis=1) + lossL2
   loss_op = tf.reduce_mean(loss_op)
+
   train_op = tf.train.AdamOptimizer(learning_rate=LR).minimize(loss_op)
 
   return fc_out, sig_out, X, Y, loss_op, train_op
